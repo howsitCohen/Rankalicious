@@ -22,6 +22,9 @@ public class GameDetailActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game_detail);
 
+        
+        // TEST GIT
+        
         // Show the Up button in the action bar.
         getActionBar().setDisplayHomeAsUpEnabled(true);
 
