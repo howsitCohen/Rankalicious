@@ -68,6 +68,7 @@ namespace RankaliciousScraper
 
         public void GetResponseXml(string response, bool fixMalformedXML = false)
         {
+            //Inital source is passed in, since is a recursive function which attempts to fix all xml parsing error, we only want to extract the google result nodes on the first pass.
             if (fixMalformedXML == false)
             {
 
@@ -75,6 +76,8 @@ namespace RankaliciousScraper
                              response.IndexOf("<div id=\"search\"");
                 response = response.Substring(response.IndexOf("<div id=\"search\""), length);
             }
+
+            //Remove all the rubbish html encodings which messing with response parsing to Xml
             response = response.Replace("&nbsp;", " ");
             response = response.Replace("&amp;", "and");
             response = response.Replace("&quot;", "\"");
@@ -86,8 +89,10 @@ namespace RankaliciousScraper
             response = response.Replace("<\br>", " ");
             response = response.Replace("\r", " ");
             response = response.Replace("\n", " ");
+            
             try
             {
+                //try to parse the response.
                 htmlDocument.Load(new StringReader(response));
             }
             catch (XmlException ex)
@@ -95,6 +100,8 @@ namespace RankaliciousScraper
                 string message = ex.Message;
                 int linenumberToFix = ex.LinePosition;
                 int linePositionToFix = ex.LinePosition;
+
+                // Get the non compliant tags out of the exception message -HAha- Thanks MS Guys
                 var result = from Match match in Regex.Matches(message, "\'([^\']*)\'")
                     select match.ToString();
 
@@ -122,18 +129,18 @@ namespace RankaliciousScraper
             foreach (var li in ListNodes)
             {
                 var result = new Result();
-                var title = from nodes in li.Descendants("h3") where nodes.Attribute("class").Value == "r" select nodes.Element("a").Value;
-                if (title != null)
+                var title = from nodes in li.Descendants("h3") where nodes.GetAttributeValue("class") == "r" select nodes.GetElementValue("a");
+                if (title.Any())
                 {
                     result.Title = title.ElementAt(0);
                 }
-                var url = from nodes in li.Descendants("div") where nodes.Attribute("class").Value == "kv" select nodes.Element("cite").Value;
-                if (url != null)
+                var url = from nodes in li.Descendants("div") where nodes.GetAttributeValue("class") == "kv" select nodes.GetElementValue("cite");
+                if (url.Any())
                 {
                     result.Url = url.ElementAt(0);
                 }
-                var description = from nodes in li.Descendants("div") where nodes.Attribute("class").Value == "s" select nodes.Element("span").Value;
-                if (description != null)
+                var description = from nodes in li.Descendants("div") where nodes.GetAttributeValue("class") == "s" select nodes.GetElementValue("span");
+                if (description.Any())
                 {
                     result.Description = description.ElementAt(0);
                 }
@@ -173,6 +180,25 @@ namespace RankaliciousScraper
                 return XDocument.Load(nodeReader);
             }
         }
+
+        public static string GetAttributeValue(this XElement element, string attributeName)
+        {
+            XAttribute attribute = element.Attribute(attributeName);
+            return attribute != null ? attribute.Value : string.Empty;
+        }
+
+        public static string GetElementValue(this XElement element)
+        {
+            return element != null ? element.Value : string.Empty;
+        }
+
+        public static string GetElementValue(this XElement element, string elementName)
+        {
+            XElement child = element.Element(elementName);
+            return child != null ? child.Value : string.Empty;
+        }
+
+
     }
 
     public class Result
