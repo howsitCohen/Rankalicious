@@ -138,6 +138,8 @@ namespace RankaliciousScraper
                     result.Description = description.ElementAt(0);
                 }
                 result.Position = position;
+                result.DateForResult = DateTime.UtcNow;
+
                 results.Add(result);
                 position++;
             }
