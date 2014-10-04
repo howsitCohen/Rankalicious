@@ -68,27 +68,25 @@ namespace RankaliciousScraper
 
         public void GetResponseXml(string response, bool fixMalformedXML = false)
         {
-            //Inital source is passed in, since is a recursive function which attempts to fix all xml parsing error, we only want to extract the google result nodes on the first pass.
+            //Inital source is passed in, since is a recursive function which attempts to fix all xml parsing error, we can only extract the google search result nodes on the first pass.
             if (fixMalformedXML == false)
             {
+               response = response.Substring(15);
+               response = response.Substring(response.IndexOf("<div id=\"search\""), response.Length - response.IndexOf("<div id=\"search\""));
+               response = response.Replace("&nbsp;", " ");
+               response = response.Replace("&amp;", "and");
+               response = response.Replace("&quot;", "\"");
+               response = response.Replace("&middot;", "-");
+               response = response.Replace("<br>", " ");
+               response = response.Replace("<\br>", " ");
+               response = response.Replace("\r", " ");
+               response = response.Replace("\n", " ");
 
-                int length = response.IndexOf("<div style=\"clear:both;margin-bottom:17px;overflow:hidden\">") -
-                             response.IndexOf("<div id=\"search\"");
-                response = response.Substring(response.IndexOf("<div id=\"search\""), length);
             }
 
             //Remove all the rubbish html encodings which messing with response parsing to Xml
-            response = response.Replace("&nbsp;", " ");
-            response = response.Replace("&amp;", "and");
-            response = response.Replace("&quot;", "\"");
-            response = response.Replace("&middot;", ".");
-            response = response.Replace("&#39;", "'");
-            response = response.Replace("&#257;", " ");
-            response = response.Replace("&#8206;", " ");
-            response = response.Replace("<br>", " ");
-            response = response.Replace("<\br>", " ");
-            response = response.Replace("\r", " ");
-            response = response.Replace("\n", " ");
+            
+            
             
             try
             {
@@ -97,6 +95,7 @@ namespace RankaliciousScraper
             }
             catch (XmlException ex)
             {
+                // 
                 string message = ex.Message;
                 int linenumberToFix = ex.LinePosition;
                 int linePositionToFix = ex.LinePosition;
@@ -109,7 +108,26 @@ namespace RankaliciousScraper
                 {
                     response = response.Remove(linePositionToFix - 3);
                 }
-                else
+                else if (message.Contains("cannot be included in a name"))
+                {
+                    response = response.Remove(linePositionToFix-1,1);
+                }
+                else if (message.Contains("is an unexpected token."))
+                {
+                    if (message.Contains("Expecting white space"))
+                    {
+                        response = response.Remove(linePositionToFix - 1, result.First().Length).Insert(linePositionToFix - 1, " ");
+                    }
+                    else
+                    {
+                        response = response.Remove(linePositionToFix - 1, result.First().Length).Insert(linePositionToFix - 1, result.Last().Trim('\'')); 
+                    }
+                    
+                }
+                else if (message.Contains("Name cannot begin with the"))
+                {
+                    response = response.Remove(linePositionToFix - 1, result.First().Length).Insert(linePositionToFix - 1, "");
+                }else
                 {
                     response = response.Insert(linePositionToFix - 3, "</" + result.First().Trim('\'') + ">");
                 }
@@ -124,7 +142,7 @@ namespace RankaliciousScraper
             var xDoc = xDocument.ToXDocument();
             // Grab all the div tags
             var bodyNode = xDocument.GetElementsByTagName("div");
-            var ListNodes = from nodes in xDoc.Descendants("li") where nodes.Attribute("class").Value == "g" select nodes;
+            var ListNodes = from nodes in xDoc.Descendants("li") where nodes.GetAttributeValue("class") == "g" select nodes;
             int position = 1;
             foreach (var li in ListNodes)
             {
@@ -146,8 +164,10 @@ namespace RankaliciousScraper
                 }
                 result.Position = position;
                 result.DateForResult = DateTime.UtcNow;
-
-                results.Add(result);
+                if (result.Title.Length > 0)
+                {
+                    results.Add(result);
+                }
                 position++;
             }
             // Enumerate them for the search results group class "srg".. this is the div where google puts the organic results 

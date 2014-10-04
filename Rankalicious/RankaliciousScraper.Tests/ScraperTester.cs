@@ -75,11 +75,10 @@ namespace RankaliciousScraper.Tests
             //ARRANGE
             var testObject = new Scraper();
             string searchTerms = "online title search";
-            int numOfResults = 5; //negative
+            int numOfResults = 100; //negative
 
             //ACT
             var googleSearchResultsSource = testObject.GetGoogleSearchResponse(searchTerms, numOfResults);
-            var googleNoResultsSource = testObject.GetGoogleSearchResponse(searchTerms, 0);
             testObject.GetResponseXml(googleSearchResultsSource);
             testObject.GetResultsObject(testObject.htmlDocument);
 
