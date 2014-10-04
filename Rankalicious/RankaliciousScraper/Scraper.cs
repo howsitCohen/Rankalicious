@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -71,23 +70,19 @@ namespace RankaliciousScraper
             //Inital source is passed in, since is a recursive function which attempts to fix all xml parsing error, we can only extract the google search result nodes on the first pass.
             if (fixMalformedXML == false)
             {
-               response = response.Substring(15);
-               response = response.Substring(response.IndexOf("<div id=\"search\""), response.Length - response.IndexOf("<div id=\"search\""));
-               response = response.Replace("&nbsp;", " ");
-               response = response.Replace("&amp;", "and");
-               response = response.Replace("&quot;", "\"");
-               response = response.Replace("&middot;", "-");
-               response = response.Replace("<br>", " ");
-               response = response.Replace("<\br>", " ");
-               response = response.Replace("\r", " ");
-               response = response.Replace("\n", " ");
-
+                response = response.Substring(15);
+                response = response.Substring(response.IndexOf("<div id=\"search\""),
+                    response.Length - response.IndexOf("<div id=\"search\""));
+                //Remove all the rubbish html encodings which messing with response parsing to Xml
+                response = response.Replace("&nbsp;", " ");
+                response = response.Replace("&amp;", "and");
+                response = response.Replace("&quot;", "\"");
+                response = response.Replace("&middot;", "-");
+                response = response.Replace("<br>", " ");
+                response = response.Replace("<\br>", " ");
+                response = response.Replace("\r", " ");
+                response = response.Replace("\n", " ");
             }
-
-            //Remove all the rubbish html encodings which messing with response parsing to Xml
-            
-            
-            
             try
             {
                 //try to parse the response.
@@ -95,7 +90,7 @@ namespace RankaliciousScraper
             }
             catch (XmlException ex)
             {
-                // 
+                
                 string message = ex.Message;
                 int linenumberToFix = ex.LinePosition;
                 int linePositionToFix = ex.LinePosition;
@@ -135,7 +130,7 @@ namespace RankaliciousScraper
             }
         }
 
-        public void GetResultsObject(XmlDocument xDocument)
+        public List<Result> GetResultsObject(XmlDocument xDocument)
         {
             XmlNode resultNode;
             var results = new List<Result>();
@@ -170,12 +165,7 @@ namespace RankaliciousScraper
                 }
                 position++;
             }
-            // Enumerate them for the search results group class "srg".. this is the div where google puts the organic results 
-           
-            string test = "";
-
-           Debug.WriteLine(htmlDocument.InnerXml);
-
+            return results;
         }
 
     }
