@@ -10,7 +10,6 @@ namespace RankaliciousWPF.Model
         private Scraper scraper = new Scraper();
         private string searchTerms = "Test";
         private int numOfResultsToReturn;
-        private string urlToFind;
 #endregion
         
 #region Properties
@@ -25,18 +24,19 @@ namespace RankaliciousWPF.Model
             get { return numOfResultsToReturn; }
             set { numOfResultsToReturn = value; }
         }
-
-        public string UrlToFind
+       
+        public ObservableCollection<Result> Results
         {
-            get { return urlToFind; }
-            set { urlToFind = value; }
+            get
+            {
+                return GetSearchResults();
+            }
         }
         #endregion
 
-        public ObservableCollection<Result> GetSearchResults()
+        private ObservableCollection<Result> GetSearchResults()
         {
-            scraper.GetResponseXml(scraper.GetGoogleSearchResponse(searchTerms, numOfResultsToReturn));
-            List<Result> resultsList = scraper.GetResultsObject(scraper.htmlDocument);
+            List<Result> resultsList = scraper.GetResultsList(SearchTerms, NumOfResultsToReturn);
             ObservableCollection<Result> results = new ObservableCollection<Result>(resultsList);
             return results;
         }

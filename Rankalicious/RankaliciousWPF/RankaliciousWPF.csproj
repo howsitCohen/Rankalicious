@@ -83,6 +83,7 @@
     <Compile Include="Controls\ThemeManager.cs" />
     <Compile Include="Controls\ViewLocator.cs" />
     <Compile Include="IShell.cs" />
+    <Compile Include="Model\ResultsModel.cs" />
     <Compile Include="Model\ScraperModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
@@ -100,18 +101,12 @@
     <Compile Include="Controls\IThemeManager.cs" />
     <Compile Include="Services\IServiceLocator.cs" />
     <Compile Include="Services\MefServiceLocator.cs" />
+    <Compile Include="Services\UrlChangedEvent.cs" />
+    <Compile Include="Services\ResultsEvent.cs" />
     <Compile Include="ViewModels\FlyoutBaseViewModel.cs" />
-    <Compile Include="ViewModels\Flyouts\Flyout1ViewModel.cs" />
-    <Compile Include="ViewModels\Flyouts\Flyout2ViewModel.cs" />
-    <Compile Include="ViewModels\Flyouts\FlyoutBottomViewModel.cs" />
-    <Compile Include="ViewModels\Flyouts\FlyoutLeftViewModel.cs" />
-    <Compile Include="ViewModels\Flyouts\FlyoutSettingsViewModel.cs" />
-    <Compile Include="ViewModels\Flyouts\FlyoutTopViewModel.cs" />
+    <Compile Include="ViewModels\ResultsViewModel.cs" />
     <Compile Include="ViewModels\ScraperViewModel.cs" />
     <Compile Include="ViewModels\ShellViewModel.cs" />
-    <Compile Include="Views\ScraperView.xaml.cs">
-      <DependentUpon>ScraperView.xaml</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -136,29 +131,13 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\Flyouts\Flyout1View.xaml">
+    <Page Include="Views\FlyoutView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\Flyouts\Flyout2View.xaml">
-      <SubType>Designer</SubType>
+    <Page Include="Views\ResultsView.xaml">
       <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\Flyouts\FlyoutBottomView.xaml">
       <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\Flyouts\FlyoutLeftView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\Flyouts\FlyoutSettingsView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\Flyouts\FlyoutTopView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\ScraperView.xaml">
       <SubType>Designer</SubType>

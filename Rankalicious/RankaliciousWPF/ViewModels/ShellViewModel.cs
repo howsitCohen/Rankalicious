@@ -4,6 +4,13 @@ using RankaliciousWPF.Views;
 
 namespace RankaliciousWPF.ViewModels
 {
+
+    static class AggregatorProvider
+    {
+        // The event aggregator
+        public static EventAggregator Aggregator = new EventAggregator();
+    }
+
     [Export(typeof(IShell))]
     public class ShellViewModel : Screen, IShell
     {
@@ -32,11 +39,13 @@ namespace RankaliciousWPF.ViewModels
         private const string WindowTitleDefault = "Rankalicious";
  
         private ScraperViewModel _scraperView;
+        private ResultsViewModel _resultsView;
         private string _windowTitle = WindowTitleDefault;
 
         public ShellViewModel()
         {
             ScraperView = new ScraperViewModel();
+            ResultsView = new ResultsViewModel();
         }
 
         public ScraperViewModel ScraperView
@@ -46,6 +55,16 @@ namespace RankaliciousWPF.ViewModels
             {
                 _scraperView = value;
                 NotifyOfPropertyChange(() => ScraperView);
+            }
+        }
+
+        public ResultsViewModel ResultsView
+        {
+            get { return _resultsView; }
+            set
+            {
+                _resultsView = value;
+                NotifyOfPropertyChange(() => ResultsView);
             }
         }
  
@@ -58,6 +77,8 @@ namespace RankaliciousWPF.ViewModels
                 NotifyOfPropertyChange(() => WindowTitle);
             }
         }
+
+
 
     }
 }

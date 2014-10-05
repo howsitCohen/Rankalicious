@@ -6,6 +6,7 @@ using System.ComponentModel.Composition.Primitives;
 using System.Linq;
 using System.Windows;
 using Caliburn.Micro;
+using MahApps.Metro.Controls.Dialogs;
 using RankaliciousWPF.Controls;
 
 namespace RankaliciousWPF
@@ -74,5 +75,7 @@ namespace RankaliciousWPF
 
             DisplayRootViewFor<IShell>();
         }
+
+       
     }
 }

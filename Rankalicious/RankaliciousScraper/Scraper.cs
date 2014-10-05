@@ -14,14 +14,14 @@ namespace RankaliciousScraper
 {
     public class Scraper
     {
-        public XmlDocument htmlDocument = new XmlDocument();
+        private XmlDocument htmlDocument = new XmlDocument();
         /// <summary>
         /// Used to get the response stream of a google search request.
         /// </summary>
         /// <param name="searchTerms">The search terms that will be used for the google search request</param>
         /// <param name="numOfResults">The number of results returned in the response</param>
         /// <returns></returns>
-        public string GetGoogleSearchResponse(string searchTerms = "online+title+search", int numOfResults = 100)
+        private string GetGoogleSearchResponse(string searchTerms, int numOfResults)
         {
             string googleSearchUrl = "https://www.google.com.au/search?num="+numOfResults+"&q="+searchTerms.Trim().Replace(' ','+');
             
@@ -65,7 +65,7 @@ namespace RankaliciousScraper
             return result;
         }
 
-        public void GetResponseXml(string response, bool fixMalformedXML = false)
+        private void GetResponseXml(string response, bool fixMalformedXML = false)
         {
             //Inital source is passed in, since is a recursive function which attempts to fix all xml parsing error, we can only extract the google search result nodes on the first pass.
             if (fixMalformedXML == false)
@@ -130,13 +130,13 @@ namespace RankaliciousScraper
             }
         }
 
-        public List<Result> GetResultsObject(XmlDocument xDocument)
+        public List<Result> GetResultsList(string searchTerms = "online+title+search", int numOfResults = 100)
         {
+            GetResponseXml(GetGoogleSearchResponse(searchTerms,numOfResults),false);
             XmlNode resultNode;
             var results = new List<Result>();
-            var xDoc = xDocument.ToXDocument();
-            // Grab all the div tags
-            var bodyNode = xDocument.GetElementsByTagName("div");
+            var xDoc = htmlDocument.ToXDocument();
+
             var ListNodes = from nodes in xDoc.Descendants("li") where nodes.GetAttributeValue("class") == "g" select nodes;
             int position = 1;
             foreach (var li in ListNodes)
@@ -151,6 +151,10 @@ namespace RankaliciousScraper
                 if (url.Any())
                 {
                     result.Url = url.ElementAt(0);
+                }
+                else
+                {
+                    result.Url = ""; 
                 }
                 var description = from nodes in li.Descendants("div") where nodes.GetAttributeValue("class") == "s" select nodes.GetElementValue("span");
                 if (description.Any())
@@ -167,6 +171,8 @@ namespace RankaliciousScraper
             }
             return results;
         }
+
+        
 
     }
 
