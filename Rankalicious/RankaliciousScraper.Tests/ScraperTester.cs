@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
+﻿using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using RankaliciousScraper;
-using System.Text;
-using System.IO;
 
 namespace RankaliciousScraper.Tests
 {
@@ -69,7 +63,7 @@ namespace RankaliciousScraper.Tests
             var testObject = new Scraper();
             testObject.UpdateSearchStarted += TestOnUpdateSearchStarted;
             testObject.UpdateResultsProcessed +=TestOnUpdateResultsProcessed;
-            var googleResults = testObject.GetResultsList();
+            testObject.GetResultsList();
 
             Assert.IsTrue(updateSearchStartedEventCalled);
             Assert.IsTrue(updateResultsProcessedEventCalled);

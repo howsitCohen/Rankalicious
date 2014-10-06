@@ -11,11 +11,7 @@ namespace RankaliciousWPF.Controls
 
         public ThemeManager()
         {
-            this.themeResources = new ResourceDictionary
-                                      {
-                                          Source =
-                                              new Uri("pack://application:,,,/Resources/Theme1.xaml")
-                                      };
+            this.themeResources = new ResourceDictionary { Source = new Uri("pack://application:,,,/Resources/Theme1.xaml") };
         }
 
         public ResourceDictionary GetThemeResources()

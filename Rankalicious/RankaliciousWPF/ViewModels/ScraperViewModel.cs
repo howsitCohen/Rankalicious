@@ -1,10 +1,8 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using Caliburn.Micro;
-using RankaliciousScraper;
 using RankaliciousWPF.Events;
 using RankaliciousWPF.Model;
-using RankaliciousWPF.Services;
 
 namespace RankaliciousWPF.ViewModels
 {
