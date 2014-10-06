@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RankaliciousScraper;
 using System.Text;
@@ -9,21 +12,27 @@ namespace RankaliciousScraper.Tests
     [TestClass]
     public class ScraperTester
     {
+
+        private bool updateSearchStartedEventCalled = false;
+        private bool updateResultsProcessedEventCalled = false;
+        private List<Result> resultsList = new List<Result>();
+        
         [TestMethod]
-        public void GetGoogleSource_BlueSky()
+        public void GetResultsList_BlueSky()
         {
             //ARRANGE
             var testObject = new Scraper();
 
             //ACT
-            var googleSource = testObject.GetGoogleSearchResponse();
+            var googleSource = testObject.GetResultsList();
             
             //ASSERT
-            Assert.IsNotNull(googleSource);    
+            Assert.IsNotNull(googleSource);
+            Assert.AreEqual(googleSource.Count,100);
         }
 
         [TestMethod]
-        public void GetGoogleSource_WithCleanParameters()
+        public void GetResultsList_WithCleanParameters()
         {
             //ARRANGE
             var testObject = new Scraper();
@@ -31,14 +40,15 @@ namespace RankaliciousScraper.Tests
             int numOfResults = 100; 
 
             //ACT
-            var googleSource = testObject.GetGoogleSearchResponse(searchTerms, numOfResults);
+            var googleResults = testObject.GetResultsList(searchTerms, numOfResults);
 
             //ASSERT
-            Assert.IsNotNull(googleSource);
+            Assert.IsNotNull(googleResults);
+            Assert.AreEqual(googleResults.Count,numOfResults);
         }
 
         [TestMethod]
-        public void GetGoogleSource_WithDirtyParameters()
+        public void GetResultsList_WithDirtyParameters()
         {
             //ARRANGE
             var testObject = new Scraper();
@@ -46,44 +56,47 @@ namespace RankaliciousScraper.Tests
             int numOfResults = -10; //negative
 
             //ACT
-            var googleSource = testObject.GetGoogleSearchResponse(searchTerms, numOfResults);
+            var googleResults = testObject.GetResultsList(searchTerms, numOfResults);
 
             //ASSERT
-            Assert.IsNotNull(googleSource);
+            Assert.IsNotNull(googleResults);
+            Assert.AreEqual(googleResults.Count, 0);
         }
 
         [TestMethod]
-        public void GetGoogleSource_WriteToConsole()
+        public void GetResultsList_EventsCalled()
         {
-            //ARRANGE
             var testObject = new Scraper();
-            string searchTerms = "online  /n title #%1 search";
-            int numOfResults = -10; //negative
+            testObject.UpdateSearchStarted += TestOnUpdateSearchStarted;
+            testObject.UpdateResultsProcessed +=TestOnUpdateResultsProcessed;
+            var googleResults = testObject.GetResultsList();
 
-            //ACT
-            var googleSource = testObject.GetGoogleSearchResponse(searchTerms, numOfResults);
-            
-
-
-            //ASSERT
-            Assert.IsNotNull(googleSource);
+            Assert.IsTrue(updateSearchStartedEventCalled);
+            Assert.IsTrue(updateResultsProcessedEventCalled);
         }
 
         [TestMethod]
-        public void GetGoogleSource_GetSearchResults()
+        public void GetResultsList_EventsCalledAndResultsPassed()
         {
-            //ARRANGE
             var testObject = new Scraper();
-            string searchTerms = "online title search";
-            int numOfResults = 100; //negative
+            testObject.UpdateSearchStarted += TestOnUpdateSearchStarted;
+            testObject.UpdateResultsProcessed += TestOnUpdateResultsProcessed;
+            var googleResults = testObject.GetResultsList();
 
-            //ACT
-            var googleSearchResultsSource = testObject.GetGoogleSearchResponse(searchTerms, numOfResults);
-            testObject.GetResponseXml(googleSearchResultsSource);
-            testObject.GetResultsObject(testObject.htmlDocument);
+            Assert.IsTrue(updateSearchStartedEventCalled);
+            Assert.IsTrue(updateResultsProcessedEventCalled);
+            Assert.AreEqual(googleResults,resultsList);
+        }
+        
+        private void TestOnUpdateResultsProcessed(List<Result> results)
+        {
+            updateResultsProcessedEventCalled = true;
+            resultsList = results;
+        }
 
-            //ASSERT
-            Assert.IsNotNull(googleSearchResultsSource);
+        private void TestOnUpdateSearchStarted()
+        {
+            updateSearchStartedEventCalled = true;
         }
 
 

@@ -8,6 +8,11 @@
              xmlns:cal="http://www.caliburnproject.org"
              mc:Ignorable="d" 
              d:DesignHeight="Auto" d:DesignWidth="300">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+        </ResourceDictionary>
+    </UserControl.Resources>
     <Grid Margin="0,5,0,0" 
                       Grid.IsSharedSizeScope="True"
                         Width="Auto">
@@ -29,17 +34,16 @@
                                HorizontalAlignment="Right"
                                Margin="0, 0, 0, 4"
                                Text="Search Keywords:" />
-        <ComboBox 
+        <TextBox 
                       Margin="10, 0, 0, 0"
                       Grid.Column="1"
                       Grid.Row="0"    
                       VerticalAlignment="Center"
                       Controls:TextboxHelper.Watermark="Google search key terms"
-                      DisplayMemberPath="Title"
-                      IsEditable="True"
-                      MaxDropDownHeight="125"
-                      Text="{Binding ScraperModel.SearchTerms}"
-                      SelectedValue="{Binding ScraperModel.SearchTerms}"
+                      Text="{Binding Path=SearchTerms,
+                                                    ValidatesOnDataErrors=True,
+                                                    UpdateSourceTrigger=PropertyChanged,
+                                                    NotifyOnValidationError=True}" 
                       Width="200"
                       Grid.IsSharedSizeScope="True"
                       ScrollViewer.HorizontalScrollBarVisibility="Auto"
@@ -52,26 +56,18 @@
                                HorizontalAlignment="Right"
                                Margin="0, 0, 0, 4"
                                Text="URL to Rank:" />
-        <ComboBox 
+        <TextBox 
                       Margin="10, 5, 0, 0"
                       Grid.Column="1"
                       Grid.Row="1"    
                       VerticalAlignment="Center"
                       Controls:TextboxHelper.Watermark="Ranking URL"
-                      DisplayMemberPath="Title"
-                      IsEditable="True"
-                      ItemsSource="{Binding Albums}"
-                      MaxDropDownHeight="125"
                       Text="{Binding UrlToFind, UpdateSourceTrigger=PropertyChanged }"
-                      SelectedValue="{Binding UrlToFind, UpdateSourceTrigger=PropertyChanged }"
                       Width="200"
                       Grid.IsSharedSizeScope="True"
                       ScrollViewer.HorizontalScrollBarVisibility="Auto"
                       ToolTip="Enter the URL you want to find the ranking of"
                       IsTabStop="True" />
-
-        
-
         <TextBlock Grid.Column="0"
                                Grid.Row="2"
                                VerticalAlignment="Bottom"
@@ -87,38 +83,17 @@
                               VerticalAlignment="Center"
                               Margin="10, 5, 0, 0"
                               Width="200"/>
-        <TextBlock Grid.Column="0"
+        <Controls:ProgressRing Grid.Column="0"
                                Grid.Row="3"
-                               VerticalAlignment="Bottom"
-                               HorizontalAlignment="Right"
-                               Margin="0, 0, 0, 4"
-                               Text="GridLines" />
-        <Button  Grid.Column="1" Grid.Row="3" VerticalAlignment="Center" Margin="10, 5, 0, 0"
+                               IsActive="True"
+                               Visibility="{Binding IsSearchInProgress, Converter={StaticResource BoolToVisibilityConverter}, UpdateSourceTrigger=PropertyChanged}" />
+        <Button  Grid.Column="1" Grid.Row="3" VerticalAlignment="Top" Margin="10, 5, 0, 0"
                     Width="200"
                     Name="DoScrap"
+                    IsEnabled="{Binding SearchEnabled}"
                     Content="Get Ranks" >
-            <i:Interaction.Triggers>
-                <i:EventTrigger EventName="Click">
-                    <cal:ActionMessage MethodName="DoScrap" />
-                </i:EventTrigger>
-            </i:Interaction.Triggers>
         </Button>
-
-        <TextBlock Grid.Column="0"
-                               Grid.Row="4"
-                               VerticalAlignment="Bottom"
-                               HorizontalAlignment="Right"
-                               Margin="0, 0, 0, 4"
-                               Text="Results" />
-        <ComboBox Grid.Column="1"
-                              Grid.Row="4"
-                              VerticalAlignment="Center"
-                              Margin="10, 5, 0, 0"
-                              Width="200"
-                              IsEditable="True"
-                              ItemsSource="{Binding Path=ResultCollection}"
-                              SelectedValuePath="Position"
-                              DisplayMemberPath="Title"/>
-
+        
     </Grid>
+    
 </UserControl>

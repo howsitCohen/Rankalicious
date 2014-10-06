@@ -1,15 +1,14 @@
 <Controls:MetroWindow x:Class="RankaliciousWPF.Views.ShellView"
                       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                      
                       xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
-                      
                       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                       xmlns:viewModels="clr-namespace:RankaliciousWPF.ViewModels"
                       mc:Ignorable="d"
                       d:DataContext="{x:Type viewModels:ShellViewModel}"
                       Title="{Binding WindowTitle}"
+                      Icon="rankalicious.ico"
                       MinWidth="1000"
                       MinHeight="600"
                       MaxWidth="1000"
@@ -19,35 +18,30 @@
                       WindowStartupLocation="CenterScreen"
                       BorderBrush="{DynamicResource AccentColorBrush}"
                       >
-    <Window.DataContext>
-        <!-- Declaratively create an instance of our SongViewModel -->
-        <viewModels:ScraperViewModel />
-    </Window.DataContext>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="150"/>
-            <RowDefinition Height="650"/>
+            <RowDefinition />
         </Grid.RowDefinitions>
-        <Grid Column="0" Row="1">
-        <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="325"/>
-            <ColumnDefinition Width="650"/>
-        </Grid.ColumnDefinitions>
-            <Grid
-                Column="0"
-                Margin="5,0,0,0">
-                <ContentControl x:Name="ScraperView" />
+        <Grid Column="0" Row="0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <Grid
+                    Column="0"
+                    Margin="15,35,0,0">
+                    <ContentControl x:Name="ScraperView" />
+                </Grid>
+                <Grid
+                    Column="1"
+                    Margin="5,35,0,0">
+                    <ContentControl x:Name="ResultsView" />
+                </Grid>
             </Grid>
-            <Grid
-                Column="1"
-                Margin="5,0,0,0">
-                <ContentControl x:Name="ResultsView" />
-            </Grid>
-        </Grid>
         </Grid>
     </Grid>
 

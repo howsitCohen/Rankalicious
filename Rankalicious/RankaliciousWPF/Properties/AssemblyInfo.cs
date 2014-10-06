@@ -17,7 +17,7 @@ using System.Windows;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("RankaliciousWPF")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Development Task for Infotrack Job Application - Pick Me")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyProduct("RankaliciousWPF")]
 [assembly: AssemblyTrademark("")]
@@ -54,3 +54,5 @@ using System.Windows;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyCompanyAttribute("HowsitCohen")]
+[assembly: AssemblyCopyrightAttribute("Will Cohen")]

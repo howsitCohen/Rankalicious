@@ -1,5 +1,7 @@
 using System.ComponentModel.Composition;
+using System.Windows;
 using Caliburn.Micro;
+using MahApps.Metro.Controls.Dialogs;
 using RankaliciousWPF.Views;
 
 namespace RankaliciousWPF.ViewModels
@@ -14,29 +16,13 @@ namespace RankaliciousWPF.ViewModels
     [Export(typeof(IShell))]
     public class ShellViewModel : Screen, IShell
     {
-        private readonly IObservableCollection<FlyoutBaseViewModel> flyouts =
-            new BindableCollection<FlyoutBaseViewModel>();
-
-        public IObservableCollection<FlyoutBaseViewModel> Flyouts
-        {
-            get
-            {
-                return this.flyouts;
-            }
-        }
 
         public void Close()
         {
             this.TryClose();
         }
 
-        public void ToggleFlyout(int index)
-        {
-            var flyout = this.flyouts[index];
-            flyout.IsOpen = !flyout.IsOpen;
-        }
-
-        private const string WindowTitleDefault = "Rankalicious";
+        private const string WindowTitleDefault = "Rankalicious - By Will Cohen for InfoTrack";
  
         private ScraperViewModel _scraperView;
         private ResultsViewModel _resultsView;

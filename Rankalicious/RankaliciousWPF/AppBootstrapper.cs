@@ -35,7 +35,7 @@ namespace RankaliciousWPF
                     AssemblySource.Instance.Select(x => new AssemblyCatalog(x)).OfType<ComposablePartCatalog>());
 
             this.container = new CompositionContainer(catalog);
-
+            
             var batch = new CompositionBatch();
 
             batch.AddExportedValue<IWindowManager>(new WindowManager());
@@ -68,11 +68,9 @@ namespace RankaliciousWPF
         {
             var startupTasks =
                 GetAllInstances(typeof(StartupTask))
-                .Cast<ExportedDelegate>()
+               .Cast<ExportedDelegate>()
                 .Select(exportedDelegate => (StartupTask)exportedDelegate.CreateDelegate(typeof(StartupTask)));
-            
             startupTasks.Apply(s => s());
-
             DisplayRootViewFor<IShell>();
         }
 

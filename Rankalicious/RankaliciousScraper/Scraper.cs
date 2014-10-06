@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -14,6 +13,29 @@ namespace RankaliciousScraper
 {
     public class Scraper
     {
+
+        /// <summary>
+        /// Triggered when Results have been processed
+        /// </summary>
+        public delegate void ResultsProcessed(List<Result> results );
+
+        /// <summary>
+        /// Triggered when we initiate a search
+        /// </summary>
+        /// <param name="uri"></param>
+        public delegate void SearchStarted();
+
+        /// <summary>
+        /// This event is fired when the Results have been scrapped and processed
+        /// </summary>
+        public event ResultsProcessed UpdateResultsProcessed;
+
+        /// <summary>
+        /// This event is fired when we initiate a search
+        /// </summary>
+        public event SearchStarted UpdateSearchStarted;
+
+
         private XmlDocument htmlDocument = new XmlDocument();
         /// <summary>
         /// Used to get the response stream of a google search request.
@@ -33,31 +55,38 @@ namespace RankaliciousScraper
                 {
                     if (response.StatusCode == HttpStatusCode.OK)
                     {
-                        return SaveGoogleRepsonse(response.GetResponseStream());
+                        return StreamToString(response.GetResponseStream());
                     }
                 }
             }
+            catch (WebException ex)
+            {
+                throw ex;
+            }
             catch (HttpListenerException ex)
             {
-                throw;
+                throw ex;
             }
             return "";
         }
 
-        private string SaveGoogleRepsonse(Stream stream)
+        private string StreamToString(Stream stream)
         {
-            Encoding encode = System.Text.Encoding.GetEncoding("utf-8");
+            Encoding encode = Encoding.GetEncoding("utf-8");
+
             // Pipes the stream to a higher level stream reader with the required encoding format. 
             StreamReader readStream = new StreamReader(stream, encode);
             Debug.WriteLine("\r\nResponse stream received.");
             string result = "";
             Char[] read = new Char[256];
+
             // Reads 256 characters at a time.     
             int count = readStream.Read(read, 0, 256);
             Debug.WriteLine("HTML...\r\n");
+
             while (count > 0)
             {
-                // Dumps the 256 characters on a string and displays the string to the console.
+                // Dumps the 256 characters on a string
                 String str = new String(read, 0, count);
                 result += str;
                 count = readStream.Read(read, 0, 256);
@@ -65,6 +94,11 @@ namespace RankaliciousScraper
             return result;
         }
 
+        /// <summary>
+        /// Recursive function that hijacks MS exceptions throw and their detailed Exception messages to fix non compliant tags
+        /// </summary>
+        /// <param name="response"></param>
+        /// <param name="fixMalformedXML"></param>
         private void GetResponseXml(string response, bool fixMalformedXML = false)
         {
             //Inital source is passed in, since is a recursive function which attempts to fix all xml parsing error, we can only extract the google search result nodes on the first pass.
@@ -72,7 +106,7 @@ namespace RankaliciousScraper
             {
                 response = response.Substring(15);
                 response = response.Substring(response.IndexOf("<div id=\"search\""),
-                    response.Length - response.IndexOf("<div id=\"search\""));
+                response.Length - response.IndexOf("<div id=\"search\""));
                 //Remove all the rubbish html encodings which messing with response parsing to Xml
                 response = response.Replace("&nbsp;", " ");
                 response = response.Replace("&amp;", "and");
@@ -90,9 +124,7 @@ namespace RankaliciousScraper
             }
             catch (XmlException ex)
             {
-                
                 string message = ex.Message;
-                int linenumberToFix = ex.LinePosition;
                 int linePositionToFix = ex.LinePosition;
 
                 // Get the non compliant tags out of the exception message -HAha- Thanks MS Guys
@@ -117,12 +149,16 @@ namespace RankaliciousScraper
                     {
                         response = response.Remove(linePositionToFix - 1, result.First().Length).Insert(linePositionToFix - 1, result.Last().Trim('\'')); 
                     }
-                    
                 }
                 else if (message.Contains("Name cannot begin with the"))
                 {
                     response = response.Remove(linePositionToFix - 1, result.First().Length).Insert(linePositionToFix - 1, "");
-                }else
+                }
+                else if (message.Contains("An error occurred while parsing EntityName"))
+                {
+                    response = response.Remove(linePositionToFix - 2, 1);
+                }
+                else
                 {
                     response = response.Insert(linePositionToFix - 3, "</" + result.First().Trim('\'') + ">");
                 }
@@ -130,52 +166,98 @@ namespace RankaliciousScraper
             }
         }
 
+
+        /// <summary>
+        /// Performs the heavingGiven the two parameters, will return a List of Res
+        /// </summary>
+        /// <param name="searchTerms"></param>
+        /// <param name="numOfResults"></param>
+        /// <returns></returns>
         public List<Result> GetResultsList(string searchTerms = "online+title+search", int numOfResults = 100)
         {
-            GetResponseXml(GetGoogleSearchResponse(searchTerms,numOfResults),false);
-            XmlNode resultNode;
+            string googleSearchResponseSource = "";
             var results = new List<Result>();
-            var xDoc = htmlDocument.ToXDocument();
-
-            var ListNodes = from nodes in xDoc.Descendants("li") where nodes.GetAttributeValue("class") == "g" select nodes;
-            int position = 1;
-            foreach (var li in ListNodes)
+            if (UpdateSearchStarted != null)
             {
-                var result = new Result();
-                var title = from nodes in li.Descendants("h3") where nodes.GetAttributeValue("class") == "r" select nodes.GetElementValue("a");
-                if (title.Any())
+                UpdateSearchStarted();
+            } 
+            try
+            {
+                googleSearchResponseSource = GetGoogleSearchResponse(searchTerms, numOfResults);
+            }
+            catch (WebException ex)
+            {
+                results.Add(new Result(){DateForResult = DateTime.Now, Description = "",Position = null, Status = ResultStatus.WebRepsonseError,Title = "Check that you have Internet Access",Url=""});
+            }
+
+            try
+            {
+                GetResponseXml(googleSearchResponseSource, false);
+                var xDoc = htmlDocument.ToXDocument();
+
+                var listNodes = from nodes in xDoc.Descendants("li") where nodes.GetAttributeValue("class") == "g" select nodes;
+                int position = 1;
+                foreach (var li in listNodes)
                 {
-                    result.Title = title.ElementAt(0);
+                    var result = new Result();
+                    var title = from nodes in li.Descendants("h3") where nodes.GetAttributeValue("class") == "r" select nodes.GetElementValue("a");
+                    if (title.Any())
+                    {
+                        result.Title = title.ElementAt(0);
+                    }
+                    var url = from nodes in li.Descendants("div") where (nodes.GetAttributeValue("class") == "kv") select nodes.GetElementValue("cite");
+                    var url2 = from nodes in li.Descendants("cite") where (nodes.GetAttributeValue("class") == "kv") select nodes.Value;
+                    if (url.Any())
+                    {
+                        result.Url = url.ElementAt(0);
+                    }
+                    else if (url2.Any())
+                    {
+                        result.Url = url2.ElementAt(0);
+                    }
+                    else
+                    {
+                        result.Url = "";
+                    }
+                    var description = from nodes in li.Descendants("div") where nodes.GetAttributeValue("class") == "s" select nodes.GetElementValue("span");
+                    if (description.Any())
+                    {
+                        result.Description = description.ElementAt(0);
+                    }
+                    if ((result.Title.Length > 0) && (results.Count < 100))
+                    {
+                        result.DateForResult = DateTime.UtcNow;
+                        result.Position = position;
+                        position++;
+                        results.Add(result);
+                    }
                 }
-                var url = from nodes in li.Descendants("div") where nodes.GetAttributeValue("class") == "kv" select nodes.GetElementValue("cite");
-                if (url.Any())
-                {
-                    result.Url = url.ElementAt(0);
-                }
-                else
-                {
-                    result.Url = ""; 
-                }
-                var description = from nodes in li.Descendants("div") where nodes.GetAttributeValue("class") == "s" select nodes.GetElementValue("span");
-                if (description.Any())
-                {
-                    result.Description = description.ElementAt(0);
-                }
-                result.Position = position;
-                result.DateForResult = DateTime.UtcNow;
-                if (result.Title.Length > 0)
-                {
-                    results.Add(result);
-                }
-                position++;
+            }
+            //Hack job to have the error messages displayed in the results datagrid
+            catch (InvalidOperationException ex)
+            {
+                results.Add(new Result() { DateForResult = DateTime.Now, Description = "", Position = null, Status = ResultStatus.XmlParseError, Title = "Error Parsing Reponse stream", Url = "" });
+            }
+            catch (ArgumentNullException ex)
+            {
+                results.Add(new Result(){DateForResult = DateTime.Now,Description = "",Position = null,Status = ResultStatus.XmlParseError,Title = "Error Parsing Reponse stream",Url = ""});
+            }
+            catch (ArgumentOutOfRangeException ex)
+            {
+                results.Add(new Result() { DateForResult = DateTime.Now, Description = "", Position = null, Status = ResultStatus.XmlParseError, Title = "Error Parsing Reponse stream", Url = "" });
+            }
+            
+            if (UpdateResultsProcessed != null)
+            {
+                UpdateResultsProcessed(results);
             }
             return results;
         }
-
-        
-
     }
 
+    /// <summary>
+    /// Helper class for XML Doc type conversions and getting element values
+    /// </summary>
     public static class DocumentExtensions
     {
         public static XmlDocument ToXmlDocument(this XDocument xDocument)
@@ -217,13 +299,25 @@ namespace RankaliciousScraper
 
     }
 
+    /// <summary>
+    /// Search Result class
+    /// </summary>
     public class Result
     {
-        public int Position { get; set; }
+        public int? Position { get; set; }
         public string Title { get; set; }
         public string Url { get; set; }
         public string Description { get; set; }
         public DateTime DateForResult { get; set; }
+        public ResultStatus Status { get; set; }
+    }
+
+    public enum ResultStatus
+    {
+        Ok,
+        XmlParseError,
+        WebRepsonseError
+        
     }
 
 }

@@ -2,59 +2,74 @@
 using System.ComponentModel;
 using Caliburn.Micro;
 using RankaliciousScraper;
+using RankaliciousWPF.Events;
 using RankaliciousWPF.Model;
 using RankaliciousWPF.Services;
 
 namespace RankaliciousWPF.ViewModels
 {
 
-    public class ScraperViewModel : Caliburn.Micro.PropertyChangedBase
+    public class ScraperViewModel : Caliburn.Micro.PropertyChangedBase, INotifyPropertyChanged, IDataErrorInfo,IHandle<ResultsEvent>
     {
+        
+
         #region Construction
         public ScraperViewModel()
         {
+            eventAggregator = AggregatorProvider.Aggregator;
+            eventAggregator.Subscribe(this);
             scraperModel = new ScraperModel { SearchTerms = "online title search", NumOfResultsToReturn = 100};
         }
         #endregion 
 
         #region Members
-        private ObservableCollection<Result> resultCollection;
+        private ObservableCollection<RankaliciousScraper.Result> resultCollection;
+        private readonly IEventAggregator eventAggregator;
         private ScraperModel scraperModel;
         private string urlToFind;
+        private bool searchEnabled;
+        private bool isSearchInProgress;
        
         #endregion
 
         #region Properties
-        public ObservableCollection<Result> ResultCollection
+
+        public string this[string columnName]
         {
             get
             {
-                return resultCollection; 
+                if (columnName == "SearchTerms" && this.SearchTerms.Length == 0)
+                {
+                    SearchEnabled = false;
+                    NotifyOfPropertyChange(() => SearchEnabled);
+                    return "Search terms required for search";
+                }
+                else if (columnName == "SearchTerms" && this.SearchTerms.Length > 0)
+                {
+                    SearchEnabled = true;
+                    NotifyOfPropertyChange(() => SearchEnabled);
+                }
+                return null;
             }
-            set
-            {
-                resultCollection = value;
-                NotifyOfPropertyChange(() => ResultCollection);
-                AggregatorProvider.Aggregator.PublishOnUIThread(new ResultsEvent(value));
-                AggregatorProvider.Aggregator.PublishOnUIThread(new UrlChangedEvent(urlToFind));
-            }
-
         }
 
-        public ScraperModel ScraperModel
+        public bool IsSearchInProgress
         {
-            get { return scraperModel; }
-            set { scraperModel = value; }
-        }
-
-        public string SearchTerms
-        {
-            get { return scraperModel.SearchTerms; }
+            get { return scraperModel.Running; }
             set
             {
-                scraperModel.SearchTerms = value;
-                NotifyOfPropertyChange(() => SearchTerms);
+                scraperModel.Running = value;
+                NotifyOfPropertyChange(() => IsSearchInProgress);
+                RaisePropertyChanged("IsSearchInProgress");
+                if (isSearchInProgress)
+                {
+                    SearchEnabled = false;
+                    NotifyOfPropertyChange(() => SearchEnabled);
+                    RaisePropertyChanged("SearchEnabled");
+                }
+               
             }
+
         }
 
         public int NumOfResultsToReturn
@@ -64,6 +79,46 @@ namespace RankaliciousWPF.ViewModels
             {
                 scraperModel.NumOfResultsToReturn = value;
                 NotifyOfPropertyChange(() => NumOfResultsToReturn);
+            }
+        }
+
+        public ObservableCollection<RankaliciousScraper.Result> ResultCollection
+        {
+            get
+            {
+                return scraperModel.Results; 
+            }
+        }
+
+        public ScraperModel ScraperModel
+        {
+            get { return scraperModel; }
+            set { scraperModel = value; }
+        }
+
+        public bool SearchEnabled
+        {
+            get { return searchEnabled; }
+            set
+            {
+                searchEnabled = value;
+                NotifyOfPropertyChange(() => SearchEnabled);
+                RaisePropertyChanged("SearchEnabled");
+            }
+        }
+
+        public string SearchTerms
+        {
+            get { return scraperModel.SearchTerms; }
+            set
+            {
+                if (Equals(value, scraperModel.SearchTerms))
+                {
+                    return;
+                }
+                scraperModel.SearchTerms = value;
+                NotifyOfPropertyChange(() => SearchTerms);
+                RaisePropertyChanged("SearchTermsEmpty");
             }
         }
 
@@ -77,6 +132,7 @@ namespace RankaliciousWPF.ViewModels
                 AggregatorProvider.Aggregator.PublishOnUIThread(new UrlChangedEvent(urlToFind));
             }
         }
+
         #endregion
 
         #region INotifyPropertyChanged memebers
@@ -85,12 +141,38 @@ namespace RankaliciousWPF.ViewModels
 
         #endregion
 
+        /// <summary>
+        /// Raises the PropertyChanged event if needed.
+        /// </summary>
+        /// <param name="propertyName">The name of the property that changed.</param>
+        protected virtual void RaisePropertyChanged(string propertyName)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+
         #region memebers
         public void DoScrap()
         {
-            ResultCollection = ScraperModel.Results;
-            
+            if (SearchEnabled == true)
+            {
+                SearchEnabled = false;
+                IsSearchInProgress = true;
+                ScraperModel.GetSearchResults();
+            }
         }
         #endregion
+
+        public string Error { get { return string.Empty; } }
+
+        // When we receive a SelectionChangedMessage...
+        public void Handle(ResultsEvent events)
+        {
+            SearchEnabled = true;
+            IsSearchInProgress = false;
+        }
+
     }
 }
